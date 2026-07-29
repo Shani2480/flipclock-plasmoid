@@ -13,8 +13,8 @@
         "License": "MIT",
         "Name": "Flip Clock",
         "Version": "1.0.0",
-        "Website": "https://github.com/shani2480/flipclock-plasmoid",
-        "BugReportUrl": "https://github.com/shani2480/flipclock-plasmoid/issues"
+        "Website": "https://github.com/Shani2480/flipclock-plasmoid",
+        "BugReportUrl": "https://github.com/Shani2480/flipclock-plasmoid/issues"
     },
     "X-Plasma-API-Minimum-Version": "6.0"
 }
