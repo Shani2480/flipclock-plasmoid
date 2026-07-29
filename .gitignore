@@ -1,0 +1,5 @@
+*.plasmoid
+build/
+.directory
+*~
+*.swp

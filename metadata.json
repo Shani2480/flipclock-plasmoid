@@ -1,0 +1,20 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "shani248"
+            }
+        ],
+        "Category": "Date and Time",
+        "Description": "Split-flap flip clock with a real two-phase flip animation",
+        "Icon": "/icons/flipclock.svg",
+        "Id": "com.github.shani2480.flipclock",
+        "License": "MIT",
+        "Name": "Flip Clock",
+        "Version": "1.0.0",
+        "Website": "https://github.com/shani2480/flipclock-plasmoid",
+        "BugReportUrl": "https://github.com/shani2480/flipclock-plasmoid/issues"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
