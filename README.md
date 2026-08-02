@@ -46,6 +46,9 @@ Right-click the widget → **Configure Flip Clock**.
 | 24-hour clock | on / off | on |
 | Show date | on / off | on |
 | Font family | any installed family | Fira Sans |
+| Show weather | on / off | off |
+| Location | city search | none |
+| Fahrenheit | on / off | off |
 
 The font falls back to the Qt default if the named family is not installed.
 Check what you have with `fc-list : family`.
@@ -57,10 +60,30 @@ thicknesses it would leave almost no room for the cards. Everything else
 works the same. In a vertical panel the cards stack instead of sitting in
 a row.
 
+## Weather
+
+Weather is off by default. Enable it under **Configure → Weather**, search for
+your city, and pick it from the results list.
+
+Data comes from [Open-Meteo](https://open-meteo.com/), which needs no API key
+and no account. The widget makes one request every 15 minutes while it is
+visible. Condition icons come from your icon theme.
+
 ## Requirements
 
 - KDE Plasma 6
 - Qt 6
+
+## How this was built
+
+This widget was developed with Claude, Anthropic's AI assistant, working from
+my design direction and tested against a real Plasma 6 desktop at every step.
+The AI wrote most of the QML; the design decisions, the testing, and the
+judgement about what shipped were mine.
+
+I mention it because I think it should be visible rather than assumed. Every
+release is manually verified on a live system before it is published, and bug
+reports go to a human.
 
 ## License
 

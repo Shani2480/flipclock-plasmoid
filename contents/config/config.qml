@@ -7,4 +7,10 @@ ConfigModel {
         icon: "preferences-desktop-color"
         source: "configGeneral.qml"
     }
+
+    ConfigCategory {
+        name: i18n("Weather")
+        icon: "weather-clear"
+        source: "configWeather.qml"
+    }
 }

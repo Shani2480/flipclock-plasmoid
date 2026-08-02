@@ -16,6 +16,10 @@ REQUIRED=(
     contents/ui/main.qml
     contents/ui/FlipCard.qml
     contents/ui/configGeneral.qml
+    contents/ui/configWeather.qml
+    contents/ui/WeatherPanel.qml
+    contents/ui/AnimatedWeatherIcon.qml
+    contents/ui/weathercodes.js
     contents/config/main.xml
     contents/config/config.qml
 )
@@ -41,11 +45,15 @@ rm -f "$OUT"
 zip -r "$OUT" metadata.json contents LICENSE README.md >/dev/null
 
 # The loader needs this exact path; prove it is in there.
-if ! unzip -l "$OUT" | grep -q 'contents/ui/main.qml'; then
+# Capture the listing first: piping straight into `grep -q` lets grep exit on
+# match, SIGPIPEs unzip, and `pipefail` then reports the whole pipeline as
+# failed — a false "missing" that depends on buffering timing.
+listing=$(unzip -l "$OUT")
+if ! printf '%s\n' "$listing" | grep -q 'contents/ui/main.qml'; then
     echo "Archive is missing contents/ui/main.qml — aborting." >&2
     rm -f "$OUT"
     exit 1
 fi
 
 echo "Built $OUT"
-unzip -l "$OUT"
+printf '%s\n' "$listing"

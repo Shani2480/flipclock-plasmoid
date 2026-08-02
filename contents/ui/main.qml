@@ -4,6 +4,8 @@ import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.kirigami as Kirigami
 
+import "weathercodes.js" as WeatherCodes
+
 PlasmoidItem {
     id: root
 
@@ -29,11 +31,83 @@ PlasmoidItem {
     // needs less. Same reason the panel snippets stepped up for light panels.
     readonly property int digitWeight:  lightMode ? Font.DemiBold : Font.Light
     readonly property color cLabel:     lightMode ? "#6b7280" : "#9aa1ab"
+    readonly property color cPanelBg:   lightMode ? "#ffffff" : "#000000"
+    readonly property real panelAlpha:  lightMode ? 0.50 : 0.30
     readonly property color cAccent:    lightMode ? "#a8823c" : "#d4b06a"
     readonly property color cSeamDark:  lightMode ? "#8a8f98" : "#0e1014"
     readonly property real seamDarkOpacity:  lightMode ? 0.40 : 0.85
     readonly property real seamLightOpacity: lightMode ? 0.85 : 0.07
     readonly property real shadeStrength:    lightMode ? 0.28 : 0.55
+
+    readonly property bool showWeather: Plasmoid.configuration.showWeather
+    readonly property string wxPlace: Plasmoid.configuration.weatherPlace
+    readonly property real wxLat: Plasmoid.configuration.weatherLatitude
+    readonly property real wxLon: Plasmoid.configuration.weatherLongitude
+    readonly property bool wxFahrenheit: Plasmoid.configuration.weatherFahrenheit
+
+    property string wxTemp: ""
+    property string wxCondition: ""
+    property string wxIcon: ""
+    property string wxCategory: ""
+    property string wxHigh: ""
+    property string wxLow: ""
+    property bool wxValid: false
+
+    onWxPlaceChanged: fetchWeather()
+    onWxFahrenheitChanged: fetchWeather()
+
+    function fetchWeather() {
+        if (!showWeather || wxPlace === "") {
+            wxValid = false;
+            return;
+        }
+        var url = "https://api.open-meteo.com/v1/forecast"
+                + "?latitude=" + wxLat + "&longitude=" + wxLon
+                + "&current=temperature_2m,weather_code,is_day"
+                + "&daily=temperature_2m_max,temperature_2m_min"
+                + "&forecast_days=1"
+                + "&timezone=auto"
+                + (wxFahrenheit ? "&temperature_unit=fahrenheit" : "");
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) {
+                return;
+            }
+            if (xhr.status !== 200) {
+                root.wxValid = false;
+                return;
+            }
+            try {
+                var j = JSON.parse(xhr.responseText);
+                var c = j.current;
+                var info = WeatherCodes.lookup(c.weather_code, c.is_day === 1);
+                root.wxTemp = Math.round(c.temperature_2m) + "\u00b0";
+                root.wxCondition = info[0];
+                root.wxIcon = info[1];
+                root.wxCategory = info[2];
+                if (j.daily && j.daily.temperature_2m_max) {
+                    root.wxHigh = Math.round(j.daily.temperature_2m_max[0]) + "\u00b0";
+                    root.wxLow = Math.round(j.daily.temperature_2m_min[0]) + "\u00b0";
+                }
+                root.wxValid = true;
+            } catch (e) {
+                root.wxValid = false;
+            }
+        };
+        xhr.open("GET", url);
+        xhr.send();
+    }
+
+    // 15 minutes: well inside Open-Meteo's free allowance, and the weather
+    // does not change faster than that in any way worth showing.
+    Timer {
+        interval: 900000
+        running: root.showWeather && root.visible
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.fetchWeather()
+    }
 
     property date now: new Date()
 
@@ -76,8 +150,9 @@ PlasmoidItem {
         readonly property bool inPanel: horiz || vert
 
         // A date line in a 44px panel would crush the cards to nothing.
-        readonly property bool wantDate: root.showDate && !inPanel
+        readonly property bool wantDate: root.showDate && !inPanel && !wantWeather
         readonly property bool wantBar: root.secondsStyle === 1
+        readonly property bool wantWeather: root.showWeather && root.wxValid && !inPanel
         readonly property bool wantAmPm: !root.use24Hour
         readonly property int cardCount: root.secondsStyle === 2 ? 3 : 2
 
@@ -92,6 +167,7 @@ PlasmoidItem {
         readonly property real hUnits: vert
             ? cardCount + (cardCount - 1) * 0.09 + (wantBar ? 0.20 : 0)
             : 1.0 + (wantDate ? 0.34 : 0) + (wantBar ? 0.20 : 0)
+              + (wantWeather ? 0.70 : 0)
 
         // In a panel only one axis is ours to choose; on the desktop, both.
         readonly property int cardH: {
@@ -209,6 +285,25 @@ PlasmoidItem {
                 font.weight: Font.Light
                 font.pixelSize: Math.max(1, Math.round(face.cardH * 0.14))
                 font.letterSpacing: Math.max(1, face.cardH * 0.035)
+            }
+
+            WeatherPanel {
+                visible: face.wantWeather
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: cards.width
+                dateText: root.now.toLocaleDateString(Qt.locale(), "ddd d MMM").toUpperCase()
+                condition: root.wxCondition
+                iconName: root.wxIcon
+                category: root.wxCategory
+                temperature: root.wxTemp
+                high: root.wxHigh
+                low: root.wxLow
+                dimColor: root.cLabel
+                strongColor: root.cDigit
+                panelColor: root.cPanelBg
+                panelAlpha: root.panelAlpha
+                fontFamily: root.fontFamily
+                unit: face.cardH
             }
         }
     }
